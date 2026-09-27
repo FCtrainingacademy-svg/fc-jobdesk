@@ -1,0 +1,18 @@
+{
+  "name": "fc-jobdesk",
+  "version": "1.0.0",
+  "description": "FC JobDesk - leads, engineer diary, job offers and materials",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/flow.test.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
+    "nodemailer": "^6.9.16",
+    "pg": "^8.13.1"
+  }
+}
