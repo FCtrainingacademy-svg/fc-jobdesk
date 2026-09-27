@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Sign in · FC JobDesk</title>
+<link rel="stylesheet" href="/static/base.css">
+</head>
+<body class="solo">
+<main class="solo-card">
+  <div class="brand">FC JobDesk</div>
+  <h1 id="h">Sign in</h1>
+  <form id="login">
+    <label class="f" for="email">Email<input id="email" type="email" autocomplete="username" required></label>
+    <label class="f" for="pw">Password<input id="pw" type="password" autocomplete="current-password" required></label>
+    <div id="msg" hidden></div>
+    <button class="btn big-btn" type="submit">Sign in</button>
+    <a href="#" id="toForgot" class="muted">Forgot your password?</a>
+  </form>
+  <form id="forgot" hidden>
+    <p class="muted">Enter your email and we'll send you a link to choose a new password.</p>
+    <label class="f" for="femail">Email<input id="femail" type="email" autocomplete="username" required></label>
+    <div id="fmsg" hidden></div>
+    <button class="btn big-btn" type="submit">Send reset link</button>
+    <a href="#" id="toLogin" class="muted">Back to sign in</a>
+  </form>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+function show(el,cls,text){el.className=cls;el.textContent=text;el.hidden=false}
+$("toForgot").onclick=e=>{e.preventDefault();$("login").hidden=true;$("forgot").hidden=false;$("h").textContent="Reset password";$("femail").value=$("email").value};
+$("toLogin").onclick=e=>{e.preventDefault();$("login").hidden=false;$("forgot").hidden=true;$("h").textContent="Sign in"};
+$("login").onsubmit=async e=>{e.preventDefault();
+  const r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:$("email").value,password:$("pw").value})});
+  const d=await r.json().catch(()=>({}));
+  if(r.ok) location.href="/app"+location.hash; else show($("msg"),"err",d.error||"Could not sign in.");
+};
+$("forgot").onsubmit=async e=>{e.preventDefault();
+  const r=await fetch("/api/password/forgot",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:$("femail").value})});
+  const d=await r.json().catch(()=>({}));
+  if(r.ok) show($("fmsg"),"ok","If that email is on JobDesk, a reset link is on its way. Check your inbox and spam folder.");
+  else show($("fmsg"),"err",d.error||"Could not send the link.");
+};
+</script>
+</body>
+</html>

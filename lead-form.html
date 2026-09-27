@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Book a gas engineer · FC Training Academy</title>
+<link rel="stylesheet" href="/static/base.css">
+<style>
+body{background:transparent;padding:0}
+form{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:640px;margin:0 auto}
+form h2,.full{grid-column:1/-1}
+@media(max-width:520px){form{grid-template-columns:1fr}}
+.hp{position:absolute;left:-5000px}
+.consent{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--soft)}
+.consent input{width:18px;height:18px;margin-top:2px;flex:none}
+</style>
+</head>
+<body>
+<form id="f" novalidate>
+  <h2>Book a gas engineer</h2>
+  <p class="muted full">Tell us what you need and we'll call you back to confirm a time. Gas emergency? Call the National Gas Emergency line on 0800 111 999.</p>
+  <label class="f" for="name">Your name<input id="name" autocomplete="name" required></label>
+  <label class="f" for="phone">Phone<input id="phone" type="tel" autocomplete="tel" required></label>
+  <label class="f" for="email">Email (optional)<input id="email" type="email" autocomplete="email"></label>
+  <label class="f" for="postcode">Postcode<input id="postcode" autocomplete="postal-code"></label>
+  <label class="f full" for="address">Address<input id="address" autocomplete="street-address"></label>
+  <label class="f full" for="job_type">What do you need?
+    <select id="job_type">
+      <option>Boiler service</option><option>Boiler repair / breakdown</option><option>New boiler quote</option>
+      <option>Gas safety certificate (CP12)</option><option>Power flush</option><option>Cooker or hob installation</option><option>Other gas work</option>
+    </select></label>
+  <label class="f full" for="description">Anything else we should know?<textarea id="description" placeholder="Boiler make and model, what's happening, best days for you"></textarea></label>
+  <input class="hp" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <label class="consent full" for="consent"><input type="checkbox" id="consent"> I agree to FC Training Academy using these details to contact me about this job, as set out in the <a href="https://fctrainingacademy.com/privacy-policy" target="_blank" rel="noopener">privacy policy</a>.</label>
+  <div id="msg" class="full" hidden></div>
+  <button class="btn big-btn full" type="submit">Send request</button>
+</form>
+<script>
+const $=id=>document.getElementById(id);
+function show(cls,text){$("msg").className=cls+" full";$("msg").textContent=text;$("msg").hidden=false}
+$("f").onsubmit=async e=>{e.preventDefault();
+  const body={};["name","phone","email","postcode","address","job_type","description","website"].forEach(k=>body[k]=$(k).value);
+  body.consent=$("consent").checked;
+  const btn=e.submitter; btn.disabled=true;
+  try{
+    const r=await fetch("/api/public/leads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){show("err",d.error||"Could not send. Please call 0203 883 2009.");btn.disabled=false;return}
+    $("f").innerHTML='<h2>Thanks, we\'ve got your request</h2><p class="full">Your reference is <b>'+d.ref+'</b>. We\'ll call you to confirm a time.</p>';
+  }catch(err){show("err","Could not send. Please call 0203 883 2009.");btn.disabled=false}
+};
+</script>
+</body>
+</html>

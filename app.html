@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
+<title>FC JobDesk</title>
+<link rel="stylesheet" href="/static/base.css">
+<style>
+header.top{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.top-in{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.top-in .who{margin-left:auto;display:flex;gap:10px;align-items:center;font-size:14px;color:var(--soft)}
+nav.tabs{display:flex;gap:4px;flex-wrap:wrap}
+nav.tabs button{font:600 15px var(--body);background:none;border:none;border-radius:8px;padding:7px 12px;color:var(--soft);cursor:pointer}
+nav.tabs button[aria-current="page"]{background:var(--brand-soft);color:var(--brand)}
+nav.tabs .badge{background:var(--brand-2);color:#fff;border-radius:999px;font-size:12px;padding:0 7px;margin-left:4px}
+main.wrap{max-width:1200px;margin:0 auto;padding:18px 16px 60px;display:flex;flex-direction:column;gap:16px}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar h1{margin-right:auto}
+.notice{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+/* diary grid */
+.grid-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table.diary{border-collapse:collapse;width:100%;min-width:880px;font-size:14px}
+table.diary th,table.diary td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);vertical-align:top}
+table.diary th{background:var(--sunk);font-weight:600;padding:8px;text-align:left;white-space:nowrap}
+table.diary th.today{background:var(--brand-soft);color:var(--brand)}
+table.diary td.eng{padding:10px;font-weight:600;white-space:nowrap;width:150px}
+.half{min-height:44px;padding:4px;display:flex;flex-direction:column;gap:4px}
+.half+.half{border-top:1px dashed var(--line)}
+.half.free{background:var(--free)}
+.half .lbl{font:500 10.5px var(--mono);color:var(--soft);text-transform:uppercase}
+.chip{display:block;text-align:left;width:100%;border:1px solid var(--line);border-left:4px solid var(--brand);background:#fff;border-radius:6px;padding:3px 6px;font:13px/1.3 var(--body);cursor:pointer;color:var(--ink)}
+.chip.offered{border-left-color:var(--brand-2);border-style:dashed;border-left-style:solid;background:var(--offer)}
+.chip.completed{border-left-color:var(--ok);opacity:.75}
+.chip b{font-weight:600}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--soft)}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+/* lists */
+.list{display:flex;flex-direction:column;gap:8px}
+.row{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
+.row:hover{border-color:var(--brand)}
+.row .sub{color:var(--soft);font-size:14px}
+.pill{font:600 12px var(--body);border-radius:999px;padding:2px 9px;white-space:nowrap}
+.p-lead{background:var(--sunk);color:var(--soft)}.p-offered{background:var(--offer);color:#8a4a0b}.p-booked{background:var(--brand-soft);color:var(--brand)}
+.p-completed{background:var(--ok-bg);color:var(--ok)}.p-cancelled{background:var(--bad-bg);color:var(--bad)}
+.p-pending{background:var(--offer);color:#8a4a0b}.p-accepted{background:var(--ok-bg);color:var(--ok)}.p-declined,.p-closed,.p-expired{background:var(--sunk);color:var(--soft)}
+.src{font:500 11px var(--mono);color:var(--soft);text-transform:uppercase}
+/* engineer week */
+.offer{border:2px solid var(--brand-2);background:var(--surface);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.offer .when{font:700 20px/1.2 var(--head)}
+.offer .acts{display:flex;gap:8px;flex-wrap:wrap}
+table.avail{border-collapse:collapse;width:100%;font-size:15px}
+table.avail td,table.avail th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+table.avail th{font-size:13px;color:var(--soft);font-weight:600}
+.tog{width:100%;min-height:40px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font:600 14px var(--body);cursor:pointer;color:var(--soft)}
+.tog[aria-pressed="true"]{background:var(--free);border-color:var(--ok);color:var(--ok)}
+.tog.job{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);cursor:pointer}
+tr.wkend td{background:#f7f9fb}
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(16,24,32,.4);z-index:40}
+aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--bg);z-index:41;overflow-y:auto;box-shadow:-10px 0 30px rgba(0,0,0,.15);padding:16px 16px calc(40px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.dhead{display:flex;gap:10px;align-items:flex-start}
+.dhead h2{margin-right:auto}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:15px}
+.kv dt{color:var(--soft)}.kv dd{margin:0}
+.form2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form2 .full{grid-column:1/-1}
+@media(max-width:560px){.form2{grid-template-columns:1fr}.kv{grid-template-columns:100px 1fr}}
+.check{display:flex;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.check input{width:18px;height:18px}
+.check .tag{margin-left:auto}
+.linkbox{font:13px var(--mono);word-break:break-all;background:var(--sunk);border-radius:6px;padding:6px 8px}
+.mat-line{display:grid;grid-template-columns:1fr 70px 36px;gap:6px;align-items:center}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.presets button{font:13px var(--body);border:1px dashed var(--line);background:var(--surface);border-radius:999px;padding:4px 10px;cursor:pointer}
+.act{font-size:13px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;z-index:60;font-weight:600}
+.empty{color:var(--soft);padding:18px;text-align:center;background:var(--surface);border:1px dashed var(--line);border-radius:12px}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <div class="brand">FC JobDesk</div>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="who"><span id="who"></span><button class="btn ghost sm" id="logout" type="button">Sign out</button></div>
+</div></header>
+<main class="wrap" id="view"></main>
+<div id="drawerHost"></div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const E=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let ME=null, TAB=null;
+const SLOT={am:"AM",pm:"PM"}, SLOTL={am:"Morning",pm:"Afternoon"};
+
+async function api(path,opts={}){
+  const r=await fetch(path,{...opts,headers:{"Content-Type":"application/json","X-JobDesk":"1",...(opts.headers||{})},body:opts.body?JSON.stringify(opts.body):undefined});
+  if(r.status===401){location.href="/login"+location.hash;throw new Error("signed out")}
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.error||"Something went wrong.");
+  return d;
+}
+document.addEventListener("click",e=>{const c=e.target.closest("[data-copy]");if(c)copy(c.dataset.copy)});
+function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
+async function copy(t,btn){try{await navigator.clipboard.writeText(t);toast("Copied")}catch(e){prompt("Copy this:",t)}}
+
+// dates (local, Monday-start weeks)
+const iso=d=>{const x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,10)};
+const addDays=(s,n)=>{const d=new Date(s+"T12:00:00");d.setDate(d.getDate()+n);return iso(d)};
+const monday=s=>{const d=new Date(s+"T12:00:00");const k=(d.getDay()+6)%7;d.setDate(d.getDate()-k);return iso(d)};
+const TODAY=iso(new Date());
+const dayLabel=(s,long)=>new Date(s+"T12:00:00").toLocaleDateString("en-GB",long?{weekday:"long",day:"numeric",month:"long"}:{weekday:"short",day:"numeric",month:"short"});
+const pill=s=>`<span class="pill p-${E(s)}">${E(s[0].toUpperCase()+s.slice(1))}</span>`;
+
+// ---------- boot ----------
+(async function(){
+  ME=await api("/api/me");
+  $("#who").textContent=ME.name;
+  $("#logout").onclick=async()=>{await api("/api/logout",{method:"POST"}).catch(()=>{});location.href="/login"};
+  const tabs=ME.role==="office"?[["diary","Diary"],["leads","Leads"],["team","Engineers"],["outbox","Emails"]]:[["week","My week"]];
+  $("#tabs").innerHTML=tabs.map(([k,l])=>`<button type="button" data-tab="${k}">${l}</button>`).join("");
+  $("#tabs").onclick=e=>{const b=e.target.closest("button[data-tab]");if(b)go(b.dataset.tab)};
+  const m=location.hash.match(/^#job-(\d+)$/);
+  go(tabs[0][0]);
+  if(m) openJob(Number(m[1]));
+})();
+function go(t){TAB=t;document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===t?"page":"false"));
+  ({diary:renderDiary,leads:renderLeads,team:renderTeam,outbox:renderOutbox,week:renderWeek})[t]();}
+function refresh(){go(TAB)}
+
+// ---------- OFFICE: diary ----------
+const thisWeek=()=>{const wd=new Date(TODAY+"T12:00:00").getDay();return wd===0||wd===6?addDays(monday(TODAY),7):monday(TODAY)};
+let diaryFrom=thisWeek();
+async function renderDiary(){
+  const d=await api(`/api/diary?from=${diaryFrom}&days=7`);
+  const days=[...Array(7)].map((_,i)=>addDays(diaryFrom,i));
+  const free=new Set(d.avail.map(a=>`${a.engineer_id}|${a.day}|${a.slot}`));
+  const cell=(eid,day,slot)=>{
+    const js=d.jobs.filter(j=>j.engineer_id===eid&&j.day===day&&j.slot===slot);
+    return `<div class="half ${free.has(`${eid}|${day}|${slot}`)?"free":""}"><span class="lbl">${SLOT[slot]}</span>${js.map(j=>`<button class="chip ${j.status}" data-job="${j.id}"><b>${E(j.job_type)}</b><br>${E(j.customer_name)} · ${E((j.postcode||"").split(" ")[0])}</button>`).join("")}</div>`;
+  };
+  const offered=d.jobs.filter(j=>j.status==="offered");
+  $("#view").innerHTML=`
+    <div class="bar"><h1>Team diary</h1>
+      <button class="btn ghost sm" id="prev">‹ Prev</button><button class="btn ghost sm" id="today">Current week</button><button class="btn ghost sm" id="next">Next ›</button>
+      <button class="btn" id="newLead">+ New lead</button></div>
+    ${ME.mail?"":`<div class="notice">Email isn't switched on yet, so engineers won't get emails. Offer and invite links appear on screen and under Emails so you can send them by WhatsApp or text.</div>`}
+    <div class="legend"><span style="--c:var(--free)">Engineer free</span><span style="--c:var(--brand-soft)">Booked</span><span style="--c:var(--offer)">Offered, waiting</span><span style="--c:var(--ok-bg)">Completed</span></div>
+    ${d.engineers.length?`<div class="grid-wrap"><table class="diary"><thead><tr><th>Engineer</th>${days.map(x=>`<th class="${x===TODAY?"today":""}">${dayLabel(x)}</th>`).join("")}</tr></thead>
+    <tbody>${d.engineers.map(e=>`<tr><td class="eng">${E(e.name)}</td>${days.map(x=>`<td>${cell(e.id,x,"am")}${cell(e.id,x,"pm")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`
+    :`<div class="empty">No engineers yet. Add them under <b>Engineers</b>. They'll get an email to set their password, then they mark the days they're free.</div>`}
+    ${offered.length?`<div class="card"><h3>Waiting for an engineer to accept</h3><div class="list" style="margin-top:8px">${offered.map(j=>`<button class="row" data-job="${j.id}"><div><b>${E(j.job_type)}</b> · ${E(j.customer_name)}<div class="sub">${dayLabel(j.day)} ${SLOT[j.slot]}</div></div>${pill("offered")}</button>`).join("")}</div></div>`:""}`;
+  $("#prev").onclick=()=>{diaryFrom=addDays(diaryFrom,-7);renderDiary()};
+  $("#next").onclick=()=>{diaryFrom=addDays(diaryFrom,7);renderDiary()};
+  $("#today").onclick=()=>{diaryFrom=thisWeek();renderDiary()};
+  $("#newLead").onclick=newLead;
+  $("#view").onclick=e=>{const b=e.target.closest("[data-job]");if(b)openJob(Number(b.dataset.job))};
+}
+
+// ---------- OFFICE: leads ----------
+async function renderLeads(){
+  const rows=await api("/api/leads");
+  $("#view").innerHTML=`<div class="bar"><h1>Leads</h1><button class="btn" id="newLead">+ New lead</button></div>
+    <p class="muted">New enquiries from the website form and ones you add. Open a lead to offer it to engineers.</p>
+    ${rows.length?`<div class="list">${rows.map(j=>`<button class="row" data-job="${j.id}"><div><span class="src">${E(j.ref)} · ${E(j.source)}</span><br><b>${E(j.job_type)}</b> · ${E(j.customer_name)} ${j.postcode?"· "+E(j.postcode):""}
+      <div class="sub">${j.day?dayLabel(j.day)+" "+SLOT[j.slot]:"No date yet"}${j.status==="offered"?` · ${j.pending_offers} offer${j.pending_offers===1?"":"s"} out`:""}</div></div>${pill(j.status)}</button>`).join("")}</div>`
+    :`<div class="empty">No open leads. New website enquiries will appear here.</div>`}`;
+  $("#newLead").onclick=newLead;
+  $("#view").onclick=e=>{const b=e.target.closest("[data-job]");if(b)openJob(Number(b.dataset.job))};
+  updateBadge(rows.filter(r=>r.status==="lead").length);
+}
+function updateBadge(n){const b=document.querySelector('#tabs [data-tab="leads"]');if(b)b.innerHTML="Leads"+(n?`<span class="badge">${n}</span>`:"")}
+
+const JOB_TYPES=["Boiler service","Boiler repair / breakdown","New boiler installation","New boiler quote","Gas safety certificate (CP12)","Power flush","Cooker or hob installation","Gas fire service","Other gas work"];
+function jobForm(j={}){
+  return `<div class="form2">
+    <label class="f" for="jf_name">Customer name<input id="jf_name" value="${E(j.customer_name)}"></label>
+    <label class="f" for="jf_phone">Phone<input id="jf_phone" type="tel" value="${E(j.customer_phone)}"></label>
+    <label class="f" for="jf_email">Email<input id="jf_email" type="email" value="${E(j.customer_email)}"></label>
+    <label class="f" for="jf_pc">Postcode<input id="jf_pc" value="${E(j.postcode)}"></label>
+    <label class="f full" for="jf_addr">Address<input id="jf_addr" value="${E(j.address)}"></label>
+    <label class="f" for="jf_type">Job type<select id="jf_type">${[...new Set([j.job_type,...JOB_TYPES].filter(Boolean))].map(t=>`<option ${t===j.job_type?"selected":""}>${E(t)}</option>`).join("")}</select></label>
+    <label class="f" for="jf_app">Appliance (make/model)<input id="jf_app" value="${E(j.appliance)}"></label>
+    <label class="f full" for="jf_desc">Job details (engineers see this)<textarea id="jf_desc">${E(j.description)}</textarea></label>
+    <label class="f" for="jf_price">Price / quote note<input id="jf_price" value="${E(j.price_note)}"></label>
+    <label class="f" for="jf_notes">Office notes (private)<input id="jf_notes" value="${E(j.office_notes)}"></label>
+  </div>`;
+}
+const readJobForm=()=>({customer_name:$("#jf_name").value,customer_phone:$("#jf_phone").value,customer_email:$("#jf_email").value,postcode:$("#jf_pc").value,address:$("#jf_addr").value,job_type:$("#jf_type").value,appliance:$("#jf_app").value,description:$("#jf_desc").value,price_note:$("#jf_price").value,office_notes:$("#jf_notes").value});
+
+function drawer(html){
+  $("#drawerHost").innerHTML=`<div class="scrim" id="scrim"></div><aside class="drawer" role="dialog" aria-modal="true">${html}</aside>`;
+  $("#scrim").onclick=closeDrawer;
+  document.onkeydown=e=>{if(e.key==="Escape")closeDrawer()};
+  const f=$("#drawerHost aside input, #drawerHost aside button");if(f)f.focus();
+}
+function closeDrawer(){$("#drawerHost").innerHTML="";document.onkeydown=null;if(location.hash)history.replaceState(null,"",location.pathname)}
+
+function newLead(){
+  drawer(`<div class="dhead"><h2>New lead</h2><button class="btn ghost sm" onclick="closeDrawer()">Close</button></div>${jobForm()}<div id="nlmsg" hidden></div><button class="btn big-btn" id="saveLead">Save lead</button>`);
+  $("#saveLead").onclick=async()=>{try{const r=await api("/api/jobs",{method:"POST",body:readJobForm()});toast(`Lead ${r.ref} saved`);openJob(r.id);refresh()}catch(e){$("#nlmsg").className="err";$("#nlmsg").textContent=e.message;$("#nlmsg").hidden=false}};
+}
+
+// ---------- job drawer (office + engineer) ----------
+async function openJob(id){
+  let d;try{d=await api("/api/jobs/"+id)}catch(e){toast(e.message);return}
+  history.replaceState(null,"","#job-"+id);
+  const j=d.job, office=ME.role==="office";
+  const when=j.day?`${dayLabel(j.day,true)} · ${SLOTL[j.slot]||""}`:"Not scheduled";
+  let h=`<div class="dhead"><div><span class="src">${E(j.ref)} · ${E(j.source)}</span><h2>${E(j.job_type)}</h2></div>${pill(j.status)}<button class="btn ghost sm" onclick="closeDrawer()">Close</button></div>
+  <div class="card"><dl class="kv">
+    <dt>When</dt><dd><b>${E(when)}</b></dd>
+    <dt>Engineer</dt><dd>${E(j.engineer_name||"Not assigned")}</dd>
+    <dt>Customer</dt><dd>${E(j.customer_name)}</dd>
+    <dt>Phone</dt><dd>${j.customer_phone?`<a href="tel:${E(j.customer_phone)}">${E(j.customer_phone)}</a>`:"–"}</dd>
+    <dt>Address</dt><dd>${E(j.address||"")} ${E(j.postcode||"")}</dd>
+    ${j.appliance?`<dt>Appliance</dt><dd>${E(j.appliance)}</dd>`:""}
+    ${j.description?`<dt>Details</dt><dd>${E(j.description)}</dd>`:""}
+    ${office&&j.price_note?`<dt>Price</dt><dd>${E(j.price_note)}</dd>`:""}
+  </dl></div>`;
+  if(office){
+    if(j.status==="lead"||j.status==="offered"){
+      h+=`<div class="card" style="display:flex;flex-direction:column;gap:10px"><h3>Offer to engineers</h3>
+        <p class="muted">Pick the day and slot, then tick 2–3 engineers. The first to accept gets the job and the others are told it's gone.</p>
+        <div class="form2"><label class="f" for="of_day">Day<input type="date" id="of_day" value="${E(j.day||addDays(TODAY,1))}" min="${TODAY}"></label>
+        <label class="f" for="of_slot">Slot<select id="of_slot"><option value="am" ${j.slot==="am"?"selected":""}>Morning (8–12)</option><option value="pm" ${j.slot==="pm"?"selected":""}>Afternoon (12–5)</option></select></label></div>
+        <div id="freeList" class="list"></div>
+        <label class="f" for="of_hours">Offer closes after<select id="of_hours"><option value="1">1 hour</option><option value="2">2 hours</option><option value="4" selected>4 hours</option><option value="12">12 hours</option><option value="24">24 hours</option></select></label>
+        <div id="ofmsg" hidden></div>
+        <div class="bar"><button class="btn" id="sendOffer">Send offer</button><button class="btn ghost" id="bookDirect">Book first ticked engineer now</button></div>
+      </div>`;
+    }
+    if(d.offers&&d.offers.length) h+=`<div class="card"><h3>Offers</h3><div class="list" style="margin-top:8px">${d.offers.map(o=>`<div class="bar"><span style="margin-right:auto">${E(o.name)}</span>${pill(o.status)}</div>`).join("")}</div></div>`;
+    h+=`<details class="card"><summary><b>Edit details</b></summary><div style="margin-top:10px;display:flex;flex-direction:column;gap:10px">${jobForm(j)}<button class="btn" id="saveJob">Save changes</button></div></details>`;
+  }
+  if(j.status==="booked"||j.status==="completed") h+=materialsBlock(d.materials, j);
+  if(office){
+    h+=`<div class="bar">${j.status==="booked"?`<button class="btn ghost" id="markDone">Mark completed</button><button class="btn ghost" id="unbook">Back to lead</button>`:""}${j.status!=="cancelled"&&j.status!=="completed"?`<button class="btn danger" id="cancelJob">Cancel job</button>`:""}</div>`;
+    if(d.activity) h+=`<div class="act"><b>History</b>${d.activity.map(a=>`<span>${new Date(a.at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})} · ${E(a.text)}</span>`).join("")}</div>`;
+  } else if(j.status==="booked"){
+    h+=`<button class="btn warn big-btn" id="engDone">Mark job completed</button>`;
+  }
+  drawer(h);
+  wireMaterials(j);
+  if(office){
+    const loadFree=async()=>{
+      if(!$("#freeList"))return;
+      const list=await api(`/api/free?day=${$("#of_day").value}&slot=${$("#of_slot").value}`).catch(()=>[]);
+      list.sort((a,b)=>(b.available&&!b.busy)-(a.available&&!a.busy));
+      $("#freeList").innerHTML=list.length?list.map(e=>`<label class="check" for="en_${e.id}"><input type="checkbox" id="en_${e.id}" value="${e.id}" ${e.available&&!e.busy?"checked":""} ${e.busy?"disabled":""}> ${E(e.name)}<span class="tag pill ${e.busy?"p-cancelled":e.available?"p-accepted":"p-lead"}">${e.busy?"Booked then":e.available?"Free":"Not marked free"}</span></label>`).join(""):`<div class="empty">No engineers yet.</div>`;
+    };
+    if($("#of_day")){$("#of_day").onchange=loadFree;$("#of_slot").onchange=loadFree;loadFree();
+      const picked=()=>[...document.querySelectorAll("#freeList input:checked")].map(i=>Number(i.value));
+      const msg=(cls,html)=>{$("#ofmsg").className=cls;$("#ofmsg").innerHTML=html;$("#ofmsg").hidden=false};
+      $("#sendOffer").onclick=async()=>{try{
+        const r=await api(`/api/jobs/${j.id}/offer`,{method:"POST",body:{day:$("#of_day").value,slot:$("#of_slot").value,engineer_ids:picked(),hours:$("#of_hours").value}});
+        if(r.links){msg("warn",`Offer saved. Email is off, so send each engineer their link:`+r.links.map(l=>`<div style="margin-top:8px"><b>${E(l.name)}</b><div class="linkbox">${E(l.link)}</div><button class="btn ghost sm" data-copy="${E(l.link)}">Copy link</button></div>`).join(""));}
+        else{toast(`Offer sent to ${r.sent} engineer${r.sent>1?"s":""}`);openJob(j.id)}
+        refresh();
+      }catch(e){msg("err",E(e.message))}};
+      $("#bookDirect").onclick=async()=>{const p=picked();if(!p.length)return msg("err","Tick the engineer you want to book.");
+        try{await api(`/api/jobs/${j.id}/assign`,{method:"POST",body:{day:$("#of_day").value,slot:$("#of_slot").value,engineer_id:p[0]}});toast("Booked");openJob(j.id);refresh()}catch(e){msg("err",E(e.message))}};
+    }
+    if($("#saveJob"))$("#saveJob").onclick=async()=>{await api("/api/jobs/"+j.id,{method:"PATCH",body:readJobForm()});toast("Saved");openJob(j.id);refresh()};
+    const setStatus=async(s,label)=>{await api("/api/jobs/"+j.id,{method:"PATCH",body:{status:s}});toast(label);openJob(j.id);refresh()};
+    if($("#markDone"))$("#markDone").onclick=()=>setStatus("completed","Marked completed");
+    if($("#unbook"))$("#unbook").onclick=()=>setStatus("lead","Moved back to leads");
+    if($("#cancelJob"))$("#cancelJob").onclick=()=>{const b=$("#cancelJob");if(b.dataset.sure){setStatus("cancelled","Job cancelled")}else{b.dataset.sure=1;b.textContent="Tap again to cancel"}};
+  } else if($("#engDone")) $("#engDone").onclick=async()=>{try{await api(`/api/jobs/${j.id}/complete`,{method:"POST"});toast("Job completed");openJob(j.id);refresh()}catch(e){toast(e.message)}};
+}
+
+// ---------- materials ----------
+const PRESETS=["Flue kit","Magnetic system filter","Condensate pipe 21.5mm (3m)","Inhibitor 1L","Gas cock 22mm","22mm copper pipe (3m)","15mm copper pipe (3m)","22mm elbows","15mm elbows","22mm tees","15mm tees","Isolation valves 15mm","Filling loop","Pressure relief pipe","PTFE tape","Jointing compound","Clips 22mm","Clips 15mm","Wireless thermostat","Cleanser 1L"];
+function materialsBlock(m,j){
+  m=m||{boiler:j.appliance||"",lines:[],notes:"",status:"draft"};
+  return `<div class="card" style="display:flex;flex-direction:column;gap:10px" id="mat">
+    <div class="bar"><h3 style="margin-right:auto">Materials for this job</h3>${pill(m.status==="sent"?"accepted":m.status==="ready"?"booked":"lead").replace(/>[^<]+</,">"+(m.status==="sent"?"Sent to K's":m.status==="ready"?"Ready":"Draft")+"<")}</div>
+    <label class="f" for="mt_boiler">Boiler make and model<input id="mt_boiler" value="${E(m.boiler)}" placeholder="e.g. Worcester Greenstar 4000 25kW combi"></label>
+    <div id="mt_lines" style="display:flex;flex-direction:column;gap:6px"></div>
+    <button class="btn ghost sm" id="mt_add" type="button" style="align-self:flex-start">+ Add item</button>
+    <div class="presets" id="mt_presets">${PRESETS.map(p=>`<button type="button">${E(p)}</button>`).join("")}</div>
+    <label class="f" for="mt_notes">Notes for K's Plumbing Store<textarea id="mt_notes" placeholder="Delivery or collection, time needed">${E(m.notes)}</textarea></label>
+    <div id="mtmsg" hidden></div>
+    <div class="bar"><button class="btn ghost" id="mt_save">Save list</button><button class="btn" id="mt_ready">Mark list ready</button>
+      <button class="btn warn" id="mt_send" ${ME.ks?"":"disabled"}>Order from K's Plumbing Store</button></div>
+    ${ME.ks?"":`<p class="muted">Ordering straight from K's Plumbing Store is coming soon. Save your list now and it will be ready to send when it's switched on.</p>`}
+  </div>`;
+}
+function wireMaterials(j){
+  if(!$("#mat"))return;
+  let lines=[];
+  api("/api/jobs/"+j.id).then(d=>{lines=(d.materials&&d.materials.lines)||[];draw()});
+  function draw(){$("#mt_lines").innerHTML=lines.length?lines.map((l,i)=>`<div class="mat-line"><input aria-label="Item" data-i="${i}" data-k="item" value="${E(l.item)}"><input aria-label="Quantity" type="number" min="1" data-i="${i}" data-k="qty" value="${E(l.qty)}"><button class="btn ghost sm" data-del="${i}" aria-label="Remove">✕</button></div>`).join(""):`<p class="muted">No items yet. Tap the suggestions below or add your own.</p>`}
+  $("#mt_lines").oninput=e=>{const t=e.target;if(t.dataset.i!=null)lines[t.dataset.i][t.dataset.k]=t.dataset.k==="qty"?Number(t.value):t.value};
+  $("#mt_lines").onclick=e=>{const b=e.target.closest("[data-del]");if(b){lines.splice(Number(b.dataset.del),1);draw()}};
+  $("#mt_add").onclick=()=>{lines.push({item:"",qty:1});draw();const ins=$("#mt_lines").querySelectorAll('input[data-k="item"]');ins[ins.length-1].focus()};
+  $("#mt_presets").onclick=e=>{const b=e.target.closest("button");if(!b)return;const f=lines.find(l=>l.item===b.textContent);if(f)f.qty++;else lines.push({item:b.textContent,qty:1});draw()};
+  const msg=(c,t)=>{$("#mtmsg").className=c;$("#mtmsg").textContent=t;$("#mtmsg").hidden=false};
+  const save=async status=>{await api(`/api/jobs/${j.id}/materials`,{method:"PUT",body:{boiler:$("#mt_boiler").value,notes:$("#mt_notes").value,lines,status}})};
+  $("#mt_save").onclick=async()=>{try{await save("draft");msg("ok","List saved.")}catch(e){msg("err",e.message)}};
+  $("#mt_ready").onclick=async()=>{try{await save("ready");msg("ok","List marked ready.")}catch(e){msg("err",e.message)}};
+  $("#mt_send").onclick=async()=>{try{await save("ready");await api(`/api/jobs/${j.id}/materials/send`,{method:"POST"});msg("ok","Order sent to K's Plumbing Store.")}catch(e){msg("err",e.message)}};
+}
+
+// ---------- OFFICE: engineers ----------
+async function renderTeam(){
+  const rows=await api("/api/engineers");
+  $("#view").innerHTML=`<div class="bar"><h1>Engineers</h1></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px"><h3>Add an engineer</h3>
+      <div class="form2"><label class="f" for="ne_name">Name<input id="ne_name"></label><label class="f" for="ne_email">Email (their username)<input id="ne_email" type="email"></label>
+      <label class="f" for="ne_phone">Mobile<input id="ne_phone" type="tel"></label><label class="f" for="ne_gs">Gas Safe ID<input id="ne_gs"></label></div>
+      <div id="nemsg" hidden></div><button class="btn" id="addEng" style="align-self:flex-start">Add and send invite</button></div>
+    <div class="list">${rows.map(e=>`<div class="row" style="cursor:default"><div><b>${E(e.name)}</b> ${e.active?"":pill("cancelled").replace("Cancelled","Inactive")}<div class="sub">${E(e.email)} ${e.phone?"· "+E(e.phone):""} ${e.gas_safe_no?"· Gas Safe "+E(e.gas_safe_no):""}<br>${e.has_password?(e.last_login?"Last signed in "+new Date(e.last_login).toLocaleDateString("en-GB"):"Password set, not signed in yet"):"Hasn't set a password yet"}</div></div>
+      <div class="bar"><button class="btn ghost sm" data-inv="${e.id}">${e.has_password?"Send reset link":"Resend invite"}</button><button class="btn ghost sm" data-act="${e.id}" data-on="${e.active?0:1}">${e.active?"Deactivate":"Reactivate"}</button></div></div>`).join("")}</div>`;
+  const msg=(c,h)=>{$("#nemsg").className=c;$("#nemsg").innerHTML=h;$("#nemsg").hidden=false};
+  const showLink=(l)=>`Email is off, so send this link to the engineer yourself:<div class="linkbox" style="margin-top:6px">${E(l)}</div><button class="btn ghost sm" data-copy="${E(l)}">Copy link</button>`;
+  $("#addEng").onclick=async()=>{try{const r=await api("/api/engineers",{method:"POST",body:{name:$("#ne_name").value,email:$("#ne_email").value,phone:$("#ne_phone").value,gas_safe_no:$("#ne_gs").value}});
+    await renderTeam();if(r.link){$("#nemsg").className="warn";$("#nemsg").innerHTML="Engineer added. "+showLink(r.link);$("#nemsg").hidden=false}else toast("Invite sent")}catch(e){msg("err",E(e.message))}};
+  $("#view").onclick=async e=>{
+    const inv=e.target.closest("[data-inv]"),act=e.target.closest("[data-act]");
+    if(inv){const r=await api(`/api/engineers/${inv.dataset.inv}/invite`,{method:"POST"});if(r.link){msg("warn",showLink(r.link));scrollTo(0,0)}else toast("Link sent")}
+    if(act){await api(`/api/engineers/${act.dataset.act}`,{method:"PATCH",body:{active:act.dataset.on==="1"}});toast("Updated");renderTeam()}
+  };
+}
+async function renderOutbox(){
+  const rows=await api("/api/outbox");
+  $("#view").innerHTML=`<div class="bar"><h1>Emails</h1></div><p class="muted">The last 50 emails JobDesk sent or tried to send. ${ME.mail?"":"Email is off: copy the links from here and send them by WhatsApp or text."}</p>
+  ${rows.length?`<div class="list">${rows.map(o=>`<div class="row" style="cursor:default"><div><b>${E(o.subject)}</b><div class="sub">To ${E(o.to_addr)} · ${new Date(o.at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div>${o.link?`<div class="linkbox" style="margin-top:6px">${E(o.link)}</div>`:""}</div>
+  <div class="bar">${o.sent?pill("accepted").replace("Accepted","Sent"):o.error?pill("cancelled").replace("Cancelled","Failed"):pill("lead").replace("Lead","Not sent")}${o.link?`<button class="btn ghost sm" data-copy="${E(o.link)}">Copy link</button>`:""}</div></div>`).join("")}</div>`:`<div class="empty">No emails yet.</div>`}`;
+}
+
+// ---------- ENGINEER: my week ----------
+let weekFrom=TODAY;
+async function renderWeek(){
+  const d=await api(`/api/my/week?from=${weekFrom}&days=14`);
+  const days=[...Array(14)].map((_,i)=>addDays(weekFrom,i));
+  const free=new Set(d.avail.map(a=>a.day+"|"+a.slot));
+  const jobAt=(day,slot)=>d.jobs.find(j=>j.day===day&&j.slot===slot&&j.status==="booked");
+  const upcoming=d.jobs.filter(j=>j.status==="booked"&&j.day>=TODAY);
+  const tog=(day,slot)=>{const j=jobAt(day,slot);if(j)return `<button class="tog job" data-job="${j.id}">${E(j.job_type)}</button>`;
+    const on=free.has(day+"|"+slot);return `<button class="tog" aria-pressed="${on}" data-day="${day}" data-slot="${slot}" ${day<TODAY?"disabled":""}>${on?"Free":"–"}</button>`};
+  $("#view").innerHTML=`
+    ${d.offers.length?`<h2>Job offers</h2>${d.offers.map(o=>`<div class="offer"><span class="src">${E(o.ref)} · Area ${E(o.area)}</span><div class="when">${E(o.job_type)}<br>${dayLabel(o.day,true)} · ${SLOTL[o.slot]}</div>${o.description?`<p>${E(o.description)}</p>`:""}
+      <p class="muted">First to accept gets it. Closes ${new Date(o.expires_at).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}.</p>
+      <div class="acts"><button class="btn big-btn" data-acc="${o.id}" style="flex:1">Accept</button><button class="btn ghost" data-dec="${o.id}">Can't do it</button></div></div>`).join("")}`:""}
+    <div class="bar"><h1>My jobs</h1></div>
+    ${upcoming.length?`<div class="list">${upcoming.map(j=>`<button class="row" data-job="${j.id}"><div><b>${E(j.job_type)}</b> · ${E(j.customer_name)}<div class="sub">${dayLabel(j.day,true)} ${SLOTL[j.slot]} · ${E(j.postcode||"")}</div></div>${pill("booked")}</button>`).join("")}</div>`:`<div class="empty">No booked jobs coming up.</div>`}
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <div class="bar"><h2 style="margin-right:auto">When I'm free</h2><button class="btn ghost sm" id="wprev" ${weekFrom<=TODAY?"disabled":""}>‹</button><button class="btn ghost sm" id="wnext">›</button></div>
+      <p class="muted">Tap a morning or afternoon to mark yourself free. The office can only offer you jobs in slots marked Free.</p>
+      <table class="avail"><thead><tr><th>Day</th><th>Morning</th><th>Afternoon</th></tr></thead><tbody>
+      ${days.map(x=>{const wd=new Date(x+"T12:00:00").getDay();return `<tr class="${wd===0||wd===6?"wkend":""}"><td>${x===TODAY?"<b>Today</b>":dayLabel(x)}</td><td>${tog(x,"am")}</td><td>${tog(x,"pm")}</td></tr>`}).join("")}
+      </tbody></table>
+      <button class="btn ghost sm" id="fillWeek" style="align-self:flex-start">Mark all weekdays free for these 2 weeks</button>
+    </div>`;
+  $("#wprev").onclick=()=>{weekFrom=addDays(weekFrom,-14);renderWeek()};
+  $("#wnext").onclick=()=>{weekFrom=addDays(weekFrom,14);renderWeek()};
+  $("#fillWeek").onclick=async()=>{for(const x of days){const wd=new Date(x+"T12:00:00").getDay();if(wd===0||wd===6||x<TODAY)continue;for(const s of ["am","pm"])if(!free.has(x+"|"+s)&&!jobAt(x,s))await api("/api/my/availability",{method:"PUT",body:{day:x,slot:s,on:true}})}toast("Weekdays marked free");renderWeek()};
+  $("#view").onclick=async e=>{
+    const t=e.target.closest(".tog[data-day]"),j=e.target.closest("[data-job]"),acc=e.target.closest("[data-acc]"),dec=e.target.closest("[data-dec]");
+    if(t&&!t.disabled){const on=t.getAttribute("aria-pressed")!=="true";t.setAttribute("aria-pressed",on);t.textContent=on?"Free":"–";
+      try{await api("/api/my/availability",{method:"PUT",body:{day:t.dataset.day,slot:t.dataset.slot,on}})}catch(err){toast(err.message);renderWeek()}}
+    else if(j) openJob(Number(j.dataset.job));
+    else if(acc){acc.disabled=true;try{const r=await api(`/api/offers/${acc.dataset.acc}/accept`,{method:"POST"});toast("You're booked");await renderWeek();openJob(r.job_id)}catch(err){toast(err.message);renderWeek()}}
+    else if(dec){await api(`/api/offers/${dec.dataset.dec}/decline`,{method:"POST"});toast("Offer declined");renderWeek()}
+  };
+}
+</script>
+</body>
+</html>

@@ -6,8 +6,8 @@ const bcrypt = require("bcryptjs");
 const { types } = require("pg");
 types.setTypeParser(1082, (v) => v); // DATE -> 'YYYY-MM-DD' string
 
-const { pool, q, migrate } = require("./lib/db");
-const mail = require("./lib/mail");
+const { pool, q, migrate } = require("./db");
+const mail = require("./mail");
 const { esc } = mail;
 
 const PORT = process.env.PORT || 3000;
@@ -90,14 +90,14 @@ const wrapA = (fn) => (req, res) => fn(req, res).catch((e) => {
 });
 
 // ---------- pages ----------
-app.use("/static", express.static(path.join(__dirname, "public"), { maxAge: "1h" }));
+app.get("/static/base.css", (req, res) => { res.set("Cache-Control", "public, max-age=3600"); res.sendFile(path.join(__dirname, "base.css")); });
 app.get("/", (req, res) => res.redirect(req.user ? "/app" : "/login"));
-app.get("/login", (req, res) => res.sendFile(path.join(__dirname, "public/login.html")));
-app.get("/set-password", (req, res) => res.sendFile(path.join(__dirname, "public/set-password.html")));
-app.get("/app", (req, res) => (req.user ? res.sendFile(path.join(__dirname, "public/app.html")) : res.redirect("/login")));
+app.get("/login", (req, res) => res.sendFile(path.join(__dirname, "login.html")));
+app.get("/set-password", (req, res) => res.sendFile(path.join(__dirname, "set-password.html")));
+app.get("/app", (req, res) => (req.user ? res.sendFile(path.join(__dirname, "app.html")) : res.redirect("/login")));
 app.get("/lead-form", (req, res) => {
   res.set("Content-Security-Policy", `frame-ancestors 'self' ${LEAD_FORM_ORIGINS.join(" ")}`);
-  res.sendFile(path.join(__dirname, "public/lead-form.html"));
+  res.sendFile(path.join(__dirname, "lead-form.html"));
 });
 app.get("/healthz", (req, res) => res.send("ok"));
 
